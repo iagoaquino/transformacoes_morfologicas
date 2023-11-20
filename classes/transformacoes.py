@@ -26,7 +26,7 @@ class Transformacoes:
     def apply_erosion(self):
         image = []
         for i in range(self.image_width):
-            line_pixel = []
+            line = []
             for j in range(self.image_height):
                 repetition = int(self.mask.size/2)
                 sumy = -repetition
@@ -36,28 +36,44 @@ class Transformacoes:
                     for l in range(self.mask.size):
                         color_point = 1
                         if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
-                            color_point = 1
-                        else:
-                            if self.image[i+sumx][j+sumy].r > 0:
-                                color_point = 1
-                            else:
-                                color_point = 0
-                        
-                        if self.mask.mask[k][l] == 0 and color_point == 1:
-                            should_paint = False
-                            break
+                            if self.mask.mask[k][l] == 0:
+                                should_paint = False
+                        else: 
+                            if self.mask.mask[k][l] == 0 and self.image[i+sumx][j+sumy] == 1:
+                                should_paint = False
+                                break
                         sumx+=1
                     if should_paint == False:
                         break
                     sumx = -repetition
                     sumy +=1
                 if should_paint:
-                    line_pixel.append(Pixel(0,0,0))
+                    line.append(0)
                 else:
-                    line_pixel.append(Pixel(255,255,255))
-            image.append(line_pixel)
+                    line.append(1)
+            image.append(line)
         return image
-
+    
+    def apply_closure(self):
+        self.image = self.apply_dilation()
+        return self.apply_erosion()
+    
+    def apply_intersection(self,img1,img2, width, height):
+        image_final = []
+        for i in range(width):
+            line_pixel = []
+            for j in range(height):
+                if img1[i][j] == 0 and img2[i][j] == 0:
+                    line_pixel.append(1)
+                elif img1[i][j] == 1 and img2[i][j] == 1:
+                    line_pixel.append(1)
+                elif img1[i][j] == 0 and img2[i][j] == 1:
+                    line_pixel.append(0)
+                else:
+                    line_pixel.append(1)
+            image_final.append(line_pixel)
+        return image_final
+    
     def apply_dilation(self):
         image = []
         for i in range(self.image_width):
@@ -71,59 +87,33 @@ class Transformacoes:
                     for l in range(self.mask.size):
                         color_point = 1
                         if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
-                            color_point = 1
+                            pass
                         else:
-                            if self.image[i+sumx][j+sumy].r > 0:
-                                color_point = 1
-                            else:
-                                color_point = 0
-                        
-                        if self.mask.mask[k][l] == 0 and color_point == 0:
-                            should_paint = True
-                            break
+                            if self.mask.mask[k][l] == 0 and self.image[i+sumx][j+sumy] == 0:
+                                should_paint = True
+                                break
                         sumx+=1
                     if should_paint == True:
                         break
                     sumx = -repetition
                     sumy +=1
                 if should_paint:
-                    line_pixel.append(Pixel(0,0,0))
+                    line_pixel.append(0)
                 else:
-                    line_pixel.append(Pixel(255,255,255))
+                    line_pixel.append(1)
             image.append(line_pixel)
-        return image
-                    
-                        
+        return image                    
                                 
-                            
-    def applyconv(self):
-        image = []
-        for i in range(self.image_width):
-            line_result = []
-            for j in range(self.image_height):
-                repetition = int(self.mask.size/2)
-                result = Pixel(0,0,0)
-                sumy = -repetition
-                for k in range(self.mask.size):
-                    sumx = -repetition
-                    
-                    for l in range(self.mask.size):
-                        if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
-                            result.r+= 0
-                            result.g+= 0
-                            result.b+= 0
-                        else:
-                            #print("rgb("+str(self.image[i+sumx][j+sumy].r) +", "+ str(self.image[i+sumx][j+sumy].g)+ ", "+str(self.image[i+sumx][j+sumy].r)+")")
-                            #print("pos("+str(k)+", "+str(l)+")"+str(self.mask.mask[k][l]) +"*"+str(self.image[i+sumx][j+sumy].r)+" (sumx:"+str(sumx)+": sumy"+str(sumy))
-                            result.r += self.image[i+sumx][j+sumy].r * self.mask.mask[k][l]
-                            result.g += self.image[i+sumx][j+sumy].g * self.mask.mask[k][l]
-                            result.b += self.image[i+sumx][j+sumy].b * self.mask.mask[k][l]
-                        sumx+=1
-                    sumy+=1
-                    sumx= -repetition
-                line_result.append(result)
-            image.append(line_result)
-        return image
-
+    def remove_intersection(self, width, height, primary_image, secondary_image):
+        final_image = []
+        for i in range(width):
+            line_pixel = []
+            for j in range(height):
+                if primary_image[i][j] == 0 and secondary_image[i][j] == 0:
+                    line_pixel.append(1)
+                else:
+                    line_pixel.append(secondary_image[i][j])
+            final_image.append(line_pixel)
+        return final_image
 
 
