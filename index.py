@@ -2,6 +2,8 @@ from classes.transformacoes import Pixel
 from classes.transformacoes import Mask
 from classes.transformacoes import Transformacoes
 from PIL import Image
+import pygame
+from pygame.locals import *
 
 def ler_image(image):
     final_image = []
@@ -92,7 +94,7 @@ def floodfill_Morfologico(image, pos_click, width, height, mask):
                         different = True
                         cont_diff += 1
             if different == False:
-                print("entrei")
+                print("terminei")
                 break
             floodfill.image = final_image
         fused_images = []
@@ -113,15 +115,56 @@ def floodfill_Morfologico(image, pos_click, width, height, mask):
 
 
 def main():
-    image = Image.open("exemplo.bmp")
-    mask_size = int(input("digite o tamanho da imagem estrutural: "))
-    mask_width = int(input("digite a largura dos marcados: "))
-    mask_height = int(input("digite a altura dos marcados"))
-    width, height, readed_image = ler_image(image)
-    readed_image = img_to_binary_mat(readed_image,width,height)
-    final_image = floodfill_Morfologico(readed_image, [120,10], width, height, generate_structural_element(mask_size, mask_width, mask_height))
-    final_image = mat_to_binary_img(final_image, width, height)
-    form_image(width, height, final_image, image)
+    #image = Image.open("exemplo.bmp")
+    #mask_size = int(input("digite o tamanho da imagem estrutural: "))
+    #mask_width = int(input("digite a largura dos marcados: "))
+    #mask_height = int(input("digite a altura dos marcados"))
+    #width, height, readed_image = ler_image(image)
+    #readed_image = img_to_binary_mat(readed_image,width,height)
+    #final_image = floodfill_Morfologico(readed_image, [120,10], width, height, generate_structural_element(mask_size, mask_width, mask_height))
+    #final_image = mat_to_binary_img(final_image, width, height)
+    #form_image(width, height, final_image, image)
+    pygame.init()
+    pressed = False
+    run = True
+    largura = 200
+    altura = 300
+    tela = pygame.display.set_mode((largura,altura))
+    tela.fill("white")
+    stop = False
+    while run:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                run = False
+            if event.type == MOUSEBUTTONDOWN:
+                pressed = True
+            if event.type == MOUSEBUTTONUP:
+                pressed = False
+
+        if pressed == True:
+            if pygame.mouse.get_pressed()[0] == True:
+                pygame.draw.rect(tela,"black", (pygame.mouse.get_pos()[0]-2,pygame.mouse.get_pos()[1]-2,4,4), width=0)
+            if pygame.mouse.get_pressed()[2] == True and stop == False:
+                stop = True
+                imagem = []
+                for i in range(largura):
+                    line_pixel = []
+                    for j in range(altura):
+                        pixel = tela.get_at((i,j))
+                        line_pixel.append(Pixel(pixel[0],pixel[1], pixel[2]))
+                    imagem.append(line_pixel)
+                mat = img_to_binary_mat(imagem, largura, altura)
+                mask = [[0,0,0], [0,0,0], [0,0,0]]
+                result = floodfill_Morfologico(mat, pygame.mouse.get_pos(), largura, altura, mask)
+                result = mat_to_binary_img(result, largura, altura)
+                for i in range(largura):
+                    for j in range(altura):
+                        tela.set_at((i,j),(result[i][j].r,result[i][j].g, result[i][j].b))
+
+        if pressed == False:
+            stop = False
+
+        pygame.display.update()
 
 
 main()

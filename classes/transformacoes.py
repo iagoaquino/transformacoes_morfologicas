@@ -22,6 +22,47 @@ class Transformacoes:
         self.image_height = height
         self.image_width = width
         self.actual_pos = [0,0]
+
+    def apply_erosion_esq(self):
+        image = []
+        for i in range(self.image_width):
+            line = []
+            for j in range(self.image_height):
+                repetition = int(self.mask.size/2)
+                sumy = -repetition
+                should_paint = True
+                for k in range(self.mask.size):
+                    sumx = -repetition
+                    for l in range(self.mask.size):
+                        if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
+                            #print("saiu - mask: "+str(self.mask.mask[k][l])+" pixel:"+str(1))
+                            #print("sumx:"+str(sumx)+", sumy: "+str(sumy))
+                            if self.mask.mask[k][l] == 0:
+                                should_paint = False
+                        else:
+                            #print("mask: "+str(self.mask.mask[k][l])+"pixel: "+str(self.image[i+sumx][j+sumy]))
+                            #print("sumx:"+str(sumx) + ", sumy"+str(sumy))
+
+                            if self.mask.mask[k][l] == 1 and self.image[i+sumx][j+sumy] == 0:
+                                should_paint = False
+                                break
+                            if self.mask.mask[k][l] == 0 and self.image[i+sumx][j+sumy] == 1:
+                                should_paint = False
+                                break
+                        if should_paint == False:
+                            break
+                        sumx+=1
+                    sumx = -repetition
+                    sumy +=1
+                if should_paint:
+                    line.append(1)
+                    #print("saiu\n")
+                else:
+                    #print("entrou\n")
+                    line.append(self.image[i][j])
+            #print(line)
+            image.append(line)
+        return image
     
     def apply_erosion(self):
         image = []
@@ -38,7 +79,9 @@ class Transformacoes:
                         if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
                             if self.mask.mask[k][l] == 0:
                                 should_paint = False
-                        else: 
+                        else:
+                            if self.mask.mask[k][l] == 2:
+                                break
                             if self.mask.mask[k][l] == 0 and self.image[i+sumx][j+sumy] == 1:
                                 should_paint = False
                                 break
@@ -85,10 +128,11 @@ class Transformacoes:
                 for k in range(self.mask.size):
                     sumx = -repetition
                     for l in range(self.mask.size):
-                        color_point = 1
                         if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
                             pass
                         else:
+                            if self.mask.mask[k][l] == 2:
+                                break
                             if self.mask.mask[k][l] == 0 and self.image[i+sumx][j+sumy] == 0:
                                 should_paint = True
                                 break
