@@ -55,7 +55,6 @@ def fuse_images(images, width, height):
     for i in range(len(images)):
         for j in range(width):
             for k in range(height):
-                if final_image[j][k] != 0:
                     if images[i][j][k] == 0:
                         final_image[j][k] = 0
                     
@@ -74,7 +73,7 @@ def subtract_images(image1, image2, width, height):
     return image_subed
 
 def main():
-    image = Image.open("exemplo.png")
+    image = Image.open("exemplo.bmp")
     width, height, readed_image = ler_image(image)
     mat = img_to_binary_mat(readed_image, width, height)
     mask = [[1,0,1],[0,0,0],[1,0,1]]
@@ -87,46 +86,48 @@ def main():
         for j in range(height):
             line.append(mat[i][j])
         final_before.append(line)
-    cont = 1
+
     keep_going = True
+
     while keep_going:
         final_image = []
-        cont_black = 0
         for i in range(width):
             line = []
             for j in range(height):
-                line.append(mat[i][j])
-            final_image.append(line) 
-
-        for i in range(cont):
-            final_image = transform.apply_erosion()
-            transform.image = final_image
-        cont+=1
-        found_black = False
+                line.append(1)
+            final_image.append(line)
         
-        for i in range(width):
-            for j in range(height):
-                if final_image[i][j] == 0:
-                    found_black = True
-                    cont_black+=1
-
+        final_image = transform.apply_erosion()
+        transform.image = final_image
         new_image = transform.apply_dilation()
         images.append(subtract_images(final_before, new_image, width, height))
+        final_before = []
+
+        for i in range(width):
+            line = []
+            for j in range(height):
+                line.append(0)
+            final_before.append(line)
+        for i in range(width):
+            for j in range(height):
+                final_before[i][j] = final_before[i][j] + final_image[i][j]
+        found_black = False
+        cont_black = 0
 
         for i in range(width):
             for j in range(height):
-                final_before[i][j] = final_image[i][j]
+                if final_before[i][j] == 0:
+                    found_black = True
+                    cont_black+=1
 
         print("achei: "+str(cont_black))
         if found_black == False:
             keep_going = False
             break
-    separated_images = []
+
     result_image = fuse_images(images, width, height)
     result_image = mat_to_binary_img(result_image, width, height)
-    for i in range(len(images)):
-        separated_images.append(mat_to_binary_img(images[i], width, height))
-    form_image(width, height, separated_images[i])
+    form_image(width, height, result_image)
 
         
 

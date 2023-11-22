@@ -75,7 +75,38 @@ class Transformacoes:
                 for k in range(self.mask.size):
                     sumx = -repetition
                     for l in range(self.mask.size):
-                        color_point = 1
+                        if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
+                            if self.mask.mask[k][l] == 0:
+                                should_paint = False
+                        else:
+                            if self.mask.mask[k][l] == 2:
+                                break
+                            if self.mask.mask[k][l] == 0 and self.image[i+sumx][j+sumy] == 1:
+                                should_paint = False
+                                break
+                        sumx+=1
+                    if should_paint == False:
+                        break
+                    sumx = -repetition
+                    sumy +=1
+                if should_paint:
+                    line.append(0)
+                else:
+                    line.append(1)
+            image.append(line)
+        return image
+        
+    def apply_erosion(self):
+        image = []
+        for i in range(self.image_width):
+            line = []
+            for j in range(self.image_height):
+                repetition = int(self.mask.size/2)
+                sumy = -repetition
+                should_paint = True
+                for k in range(self.mask.size):
+                    sumx = -repetition
+                    for l in range(self.mask.size):
                         if (i+sumx < 0 or i+sumx >= self.image_width) or (j+sumy < 0 or j+sumy >= self.image_height):
                             if self.mask.mask[k][l] == 0:
                                 should_paint = False
